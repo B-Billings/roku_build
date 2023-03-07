@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('mysql');
+const { user } = require('../config/user');
 const creds = require('../config/user');
 
 //create the sql connection pool, for all the sql code reference to npm sql website
@@ -25,6 +26,13 @@ router.get('/users', (req, res) => {
        
           // Handle error after the release.
           if (error) throw error;
+
+          results.forEach(user => {
+            delete user.fname;
+            delete user.lname;
+            delete user.password;
+
+          });
        
           // Don't use the connection here, it has been returned to the pool.
           res.json(results);
