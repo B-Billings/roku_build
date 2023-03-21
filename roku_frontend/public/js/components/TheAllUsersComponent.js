@@ -3,8 +3,7 @@ export default {
     name: 'TheAllUsersComponent',
 
     template: `
-    <section>
-        <h1>All Users Shopuld Show Up Here</h1>
+    <section class="user-panel">
         <h2>Who's Using Roku?</h2>
 
         <section>

@@ -1,21 +1,47 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('mysql');
-const { user } = require('../config/user');
 const creds = require('../config/user');
 
-//create the sql connection pool, for all the sql code reference to npm sql website
+// create the sql connection pool
 var pool  = sql.createPool(creds);
 
 router.get('/', (req, res) => {
     res.json({message: 'hit the main ums route'});
 })
 
+//Try our login route - set it up and send back a message
+router.post('/login', (req,res) => {
+  console.log('hit the login route');
+  console.log(req.body);
 
-//get all users
+  pool.getConnection(function(err, connection) {
+    if (err) throw err; // not connected!
+   
+    // Use the connection
+    connection.query(`SELECT username, password FROM tbl_users WHERE username="${req.body.username}"`, function (error, results) {
+      // When done with the connection, release it.
+      connection.release();
+   
+      // Handle error after the release.
+      if (error) throw error;
+      console.log('the user data:',results, results.length);
+      // Don't use the connection here, it has been returned to the pool.
+      if (results.length ==0){
+        res.json({message: 'no user'});
+      } else if (results[0].password !== req.body.password) {
+        res.json ({message : 'wrong password'})
+      } else {
+        res.json({ message: 'success', user: results[0]});
+      }
+    });
+  });
+
+})
+
+// get all users from this route
 router.get('/users', (req, res) => {
-
-    //START THE POOL QUERY - try to query the database and get all of the users
+    // try to query and get all of the users
     pool.getConnection(function(err, connection) {
         if (err) throw err; // not connected!
        
@@ -32,23 +58,24 @@ router.get('/users', (req, res) => {
             delete user.lname;
             delete user.password;
 
-          });
+            if (user.avatar == "default"){
+              user.avater = 'temp_avatar.jpg'
+            }
+          })
        
           // Don't use the connection here, it has been returned to the pool.
           res.json(results);
         });
       });
-
-    //END THE POOL QUERY
-
+    // end pool query
+    
 })
 
-//get one users in this route
+// get one user from this route
 router.get('/users/:user', (req, res) => {
-    
-    //START THE POOL QUERY - try to query the database and get all of the users
-    //this is the user id:
-    //console.log(req, params, user);
+    // try to query and get all of the users
+    // this is the user ID:
+    console.log(req.params.user);
 
     pool.getConnection(function(err, connection) {
         if (err) throw err; // not connected!
@@ -60,15 +87,17 @@ router.get('/users/:user', (req, res) => {
        
           // Handle error after the release.
           if (error) throw error;
-          console.log(results);
-       
+        console.log(results);
           // Don't use the connection here, it has been returned to the pool.
           res.json(results);
         });
       });
+    // end pool query
+    
+})
 
-    //END THE POOL QUERY
-
+router.get('/user/:user', (req, res) => {
+    res.json({message: 'hit single users route'});
 })
 
 module.exports = router;
